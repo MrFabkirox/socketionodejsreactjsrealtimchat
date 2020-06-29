@@ -6,9 +6,9 @@ const addUser = ({ id, name, room }) => {
 
   const existingUser = users.find((user) => {
     user.room === room &&
-    user.name === name );
+    user.name === name
   });
-  // sendingdynamicle error to if error socketon join server index.js
+  // senddynamic error if error socketon join server index.js
   if(existingUser) {
     return { error: 'Username is taken' }
   }

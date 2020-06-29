@@ -1,7 +1,6 @@
 const express = require('express');
 const socketio = require('socket.io');
-const http = require('http');
-
+const http = require('http'); 
 const { addUser, removeUser, getUser, getUsersInRoom }
   = require('./users.js');
 
@@ -24,6 +23,7 @@ io.on('connection', (socket) => {
     const { error, user } = addUser({
       id: socket.id, name, room
     });
+  console.log("___________addUser [%o]", addUser);
       
     if(error) return callback(error);
     // emit from the back to the frontend
@@ -37,10 +37,10 @@ io.on('connection', (socket) => {
     })
 
     socket.join(user.room);
+    console.log('server index io on join user/room', name, room);
 
     callback();
   });
-  console.log(name, room);
 
   // 1
   // const error = true;
@@ -49,21 +49,21 @@ io.on('connection', (socket) => {
   // if(error == true) {
   //   callback({ error: 'err'});
   // };
-});
 
-// we wait expected message on the back from front
-socket.on('sendMessage', () => {
-  const user = getUser(socket.id);
-
-  io.to(user.room).emit('message', {
-    user: user.name,
-    text: message
+  // we wait expected message on the back from front
+  socket.on('sendMessage', () => {
+    const user = getUser(socket.id);
+  
+    io.to(user.room).emit('message', {
+      user: user.name,
+      text: message
+    });
+    callback();
   });
-  callback();
-});
-
-socket.on('disconnect', () => {
-  console.log('user left');
+  
+  socket.on('disconnect', () => {
+    console.log('user left');
+  });
 });
 
 app.use(router);
