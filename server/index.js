@@ -1,17 +1,16 @@
 const express = require('express');
 const socketio = require('socket.io');
-const http = require('http'); 
+const http = require('http');
+const cors = require('cors');
+
 const { addUser, removeUser, getUser, getUsersInRoom }
   = require('./users.js');
-
-const cors = require('cors')
 
 const PORT  = process.env.PORT  || 5000;
 
 const router = require('./router');
 
 const app = express();
-// app.use(cors())
 
 // // handling cors error
 // app.use((req, res, next) => {
@@ -37,6 +36,8 @@ io.on('connection', (socket) => {
   console.log('new connection');
 
   socket.on('join', ({ name, room }, callback) => {
+    console.log("__________________ addUser [%o]", addUser);
+
     const { error, user } = addUser({
       id: socket.id, name, room
     });
@@ -55,6 +56,9 @@ io.on('connection', (socket) => {
 
     socket.join(user.room);
     console.log('server index io on join user/room', name, room);
+
+    io.to(user.room).emit('roomData', {
+      room: user.room, users: getUsersInRoom(user.room)})
 
     callback();
   });
@@ -75,15 +79,28 @@ io.on('connection', (socket) => {
       user: user.name,
       text: message
     });
+    io.to(user.room).emit('roomData', {
+      room: user.room,
+      text: message
+    });
     callback();
   });
 
   socket.on('disconnect', () => {
     console.log('user left');
+
+    const user = removeUser(socket.id);
+
+    if(user) {
+      io.to(user.room).emit('message', {
+        user: 'admin',
+        text: `${user.name} had left`})
+    }
   });
 });
 
 app.use(router);
+app.use(cors());
 
 server.listen(PORT, () => {
   console.log(`Server at ${PORT}`)
