@@ -7,10 +7,9 @@ const { addUser, removeUser, getUser, getUsersInRoom }
   = require('./users.js');
 
 const PORT  = process.env.PORT  || 5000;
-
 const router = require('./router');
-
 const app = express();
+const server = http.createServer(app);
 
 // // handling cors error
 // app.use((req, res, next) => {
@@ -28,20 +27,18 @@ const app = express();
 //   next();
 // });
 
-
-const server = http.createServer(app);
 const io = socketio(server)
 
 io.on('connection', (socket) => {
-  console.log('new connection');
+  console.log("1_______ socket [%o]", socket.handshake);
 
   socket.on('join', ({ name, room }, callback) => {
-    console.log("__________________ addUser [%o]", addUser);
+    console.log("2_______ room [%o]", room);
 
     const { error, user } = addUser({
       id: socket.id, name, room
     });
-  console.log("___________addUser [%o]", addUser);
+    console.log("3_______ addUser [%o]", addUser);
 
     if(error) return callback(error);
     // emit from the back to the frontend
@@ -55,7 +52,7 @@ io.on('connection', (socket) => {
     })
 
     socket.join(user.room);
-    console.log('server index io on join user/room', name, room);
+    console.log('4________server index io on join user/room', name, room);
 
     io.to(user.room).emit('roomData', {
       room: user.room, users: getUsersInRoom(user.room)})
